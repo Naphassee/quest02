@@ -29,7 +29,8 @@ class TodosController < ApplicationController
         # สมมติว่าเราต้องการ clear ฟอร์มหลังบันทึกสำเร็จ
         render turbo_stream: [
           turbo_stream.prepend('todos', partial: 'todos/todo', locals: { todo: @todo }),
-          turbo_stream.replace('new_todo', partial: 'todos/form', locals: { todo: Todo.new })
+          turbo_stream.replace('new_todo', partial: 'todos/form', locals: { todo: Todo.new }),
+          turbo_stream.remove('no_quests')
         ]
       end
       format.html { redirect_to todos_path, notice: 'Todo was successfully created.' }
@@ -39,7 +40,7 @@ class TodosController < ApplicationController
       end
       format.html { render :new }
     end
-    end
+  end
   end
 
 
@@ -71,7 +72,13 @@ class TodosController < ApplicationController
     @todo.update(done: !@todo.done)
 
     respond_to do |format|
-      format.turbo_stream
+      format.turbo_stream {
+        render turbo_stream: turbo_stream.replace(
+          "todo_#{@todo.id}",
+          partial: "todos/todo",
+          locals: { todo: @todo }
+        )
+      }
       format.html { redirect_to todos_path }
     end
   end
@@ -79,11 +86,11 @@ class TodosController < ApplicationController
   private
     # Use callbacks to share common setup or constraints between actions.
     def set_todo
-      @todo = Todo.find(params.expect(:id))
+      @todo = Todo.find(params[:id])
     end
 
     # Only allow a list of trusted parameters through.
     def todo_params
-      params.expect(todo: [ :title, :done ])
+      params.require(:todo).permit(:title, :done)
     end
 end
