@@ -21,18 +21,27 @@ class TodosController < ApplicationController
 
   # POST /todos or /todos.json
   def create
-    @todo = Todo.new(todo_params)
+  @todo = Todo.new(todo_params)
 
-    respond_to do |format|
-      if @todo.save
-        format.html { redirect_to @todo, notice: "Todo was successfully created." }
-        format.json { render :show, status: :created, location: @todo }
-      else
-        format.html { render :new, status: :unprocessable_entity }
-        format.json { render json: @todo.errors, status: :unprocessable_entity }
+  respond_to do |format|
+    if @todo.save
+      format.turbo_stream do
+        # สมมติว่าเราต้องการ clear ฟอร์มหลังบันทึกสำเร็จ
+        render turbo_stream: [
+          turbo_stream.prepend('todos', partial: 'todos/todo', locals: { todo: @todo }),
+          turbo_stream.replace('new_todo', partial: 'todos/form', locals: { todo: Todo.new })
+        ]
       end
+      format.html { redirect_to todos_path, notice: 'Todo was successfully created.' }
+    else
+      format.turbo_stream do
+        render turbo_stream: turbo_stream.replace('new_todo', partial: 'todos/form', locals: { todo: @todo })
+      end
+      format.html { render :new }
+    end
     end
   end
+
 
   # PATCH/PUT /todos/1 or /todos/1.json
   def update
