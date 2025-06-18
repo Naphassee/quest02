@@ -57,6 +57,16 @@ class TodosController < ApplicationController
     end
   end
 
+  def toggle_done
+    @todo = Todo.find(params[:id])
+    @todo.update(done: !@todo.done)
+
+    respond_to do |format|
+      format.turbo_stream
+      format.html { redirect_to todos_path }
+    end
+  end
+
   private
     # Use callbacks to share common setup or constraints between actions.
     def set_todo
