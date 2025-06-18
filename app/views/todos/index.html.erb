@@ -1,20 +1,14 @@
-<p style="color: green"><%= notice %></p>
-
-<% content_for :title, "Todos" %>
-
 <h1>Todos</h1>
 
-<%= link_to 'New Todo', new_todo_path %>
+<!-- ส่วนของ new form ใน Turbo Frame -->
+<%= turbo_frame_tag "new_todo" do %>
+  <%= render 'form', todo: Todo.new %>
+<% end %>
 
-<ul>
+<hr>
+
+<ul id="todos">
   <% @todos.each do |todo| %>
-    <li id="todo_<%= todo.id %>">
-      <%= form_with model: todo, url: toggle_done_todo_path(todo), method: :patch, data: { turbo_stream: true } do |f| %>
-        <%= f.check_box :done, checked: todo.done, onchange: "this.form.requestSubmit()" %>
-        <span style="<%= 'text-decoration: line-through;' if todo.done %>">
-          <%= todo.title %>
-        </span>
-      <% end %>
-    </li>
+    <%= render 'todo', todo: todo %>
   <% end %>
 </ul>
